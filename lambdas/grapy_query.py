@@ -34,7 +34,7 @@ def no_vintage(event, context):
 
     logging.debug(result)
     items = result['Items']
-    counter = 1
+    counter = 0
 
     for res in items[:10]:
         counter = counter + 1
@@ -96,7 +96,7 @@ def no_vintage(event, context):
 
     return {
         'statusCode': 200,
-        'body': '{} to update'.format(len(items))  # TODO: better message
+        'body': '{} items updated, {} left to update'.format(counter, max(0, len(items) - 10))  # TODO: better message
     }
 
 
