@@ -5,7 +5,7 @@ Vivino wine ratings for online vendors
 
 ## Getting started
 
-make sure you have an active AWS account [ref?]
+Make sure that you have an active AWS account and that credentials are setup
 warning for cost
 
 Run the following commands to setup the required resources on AWS:
@@ -26,3 +26,17 @@ Run the following commands to setup the required resources on AWS:
     > curl https://[your-api-id].execute-api.eu-west-1.amazonaws.com/prod/all/wine-types
 
 
+## Run a spider
+
+Now run a spider as follows
+
+> scrapy crawl bloem --logfile logs/bloem.log
+
+
+## Get the ratings
+
+Make sure to update the file `algoliasearch.yml` with the correct parameters.
+
+Get Vivino ratings and details
+
+> sls invoke -f grapyNoVintage --stage prod --log
