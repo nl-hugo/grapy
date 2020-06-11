@@ -1,0 +1,36 @@
+# -*- coding: utf-8 -*-
+import scrapy
+
+from vendors.items import VendorWine
+from vendors.utils import float_or_none
+
+
+class $classname(scrapy.Spider):
+    name = '$name'
+    allowed_domains = ['$domain']
+    start_urls = [
+        'https://$domain/',
+    ]
+
+    def parse(self, response):
+        """ Parse the response """
+        urls = response.css('').extract()
+        for url in urls:
+            yield scrapy.Request(url=url, callback=self.parse_item)
+
+        next_page_url = response.css('').get()
+        if next_page_url is not None:
+            yield scrapy.Request(next_page_url)
+
+    def parse_item(self, response):
+        """ Creates a VendorWine from the response """
+        wine = VendorWine()
+        wine['vendor'] = {'name': self.name.title(), 'url': self.allowed_domains[0]}
+        wine['url'] = response.url
+        wine['winery'] = ''
+        wine['name'] = ''
+        wine['price'] = float_or_none('')
+        wine['year'] = ''
+        wine['volume'] = float_or_none('')
+
+        yield wine
