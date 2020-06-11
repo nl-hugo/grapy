@@ -68,8 +68,9 @@ functions:
     handler: lambdas/grapy_query.no_vintage  # scheduled every 15 minutes
     events:
       - schedule:
-        rate: rate(15 minutes)
-        enabled: true
+          name: vivino-search-schedule
+          rate: rate(15 minutes)
+          enabled: true
   vivinoSearch:
     handler: lambdas/vivino_search.search_vintage  # should be invoked by listNoVintage
   vivinoList:
