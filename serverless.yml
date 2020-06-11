@@ -30,6 +30,7 @@ custom: ${file(algoliasearch.yml)}
 provider:
   name: aws
   runtime: python3.8
+  timeout: 10 # optional, in seconds, default is 6
   region: eu-west-1
   stage: dev
   environment:
@@ -52,6 +53,7 @@ provider:
       Resource:
         - 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}'
         - 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}/index/*'
+        - 'arn:aws:lambda:${opt:region, self:provider.region}:*:function:*'
 
 # TODO: restrict access to PUT functions
 functions:
@@ -63,9 +65,11 @@ functions:
           method: get
           cors: true
   grapyNoVintage:
-    handler: lambdas/grapy_query.no_vintage  # should be scheduled, invokes the search function to search vivino; the search does not need an event
-  #    events:
-  #      - schedule: rate(1 minute)
+    handler: lambdas/grapy_query.no_vintage  # scheduled every 15 minutes
+    events:
+      - schedule:
+        rate: rate(15 minutes)
+        enabled: true
   vivinoSearch:
     handler: lambdas/vivino_search.search_vintage  # should be invoked by listNoVintage
   vivinoList:
