@@ -1,5 +1,6 @@
 .idea
 .serverless
 node_modules
+__pycache__
 
 algoliasearch.yml
