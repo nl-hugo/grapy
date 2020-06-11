@@ -1,0 +1,12 @@
+{
+  "name": "grapy",
+  "version": "0.0.1",
+  "description": "Vivino wine ratings for online vendors",
+  "author": "",
+  "license": "MIT",
+  "repository": "https://github.com/nl-hugo/grapy.git",
+  "dependencies": {},
+  "devDependencies": {
+    "serverless-python-requirements": "^5.1.0"
+  }
+}

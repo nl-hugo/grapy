@@ -1,0 +1,8 @@
+{
+  "entity": "regions",
+  "pk": "id",
+  "gs1_sk": "name",
+  "keep": [
+    "country"
+  ]
+}

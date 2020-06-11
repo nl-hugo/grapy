@@ -1,0 +1,9 @@
+{
+  "entity": "wine-styles",
+  "pk": "id",
+  "gs1_sk": "name",
+  "keep": [
+    "regional_name",
+    "varietal_name"
+  ]
+}

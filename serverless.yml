@@ -1,0 +1,104 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: grapy
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+plugins:
+  - serverless-python-requirements
+package:
+  exclude:
+    - ./**
+  include:
+    - lambdas/**
+
+custom: ${file(algoliasearch.yml)}
+
+provider:
+  name: aws
+  runtime: python3.8
+  region: eu-west-1
+  stage: dev
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    ALGOLIA_APP: ${self:custom.algolia.applicationId}
+    ALGOLIA_KEY: ${self:custom.algolia.apiKey}
+    ALGOLIA_INDEX: ${self:custom.algolia.indexName}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:DescribeTable
+        - dynamodb:BatchWriteItem
+      Resource:
+        - 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}'
+        - 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}/index/*'
+
+# TODO: restrict access to PUT functions
+functions:
+  grapyAll:
+    handler: lambdas/grapy_query.get_all
+    events:
+      - http:
+          path: all/{entity}
+          method: get
+          cors: true
+  grapyNoVintage:
+    handler: lambdas/grapy_query.no_vintage  # should be scheduled, invokes the search function to search vivino; the search does not need an event
+  #    events:
+  #      - schedule: rate(1 minute)
+  vivinoSearch:
+    handler: lambdas/vivino_search.search_vintage  # should be invoked by listNoVintage
+  vivinoList:
+    handler: lambdas/vivino_api.get_all # should be invoked once a month (?) for country, region, type, style, grape
+  vivinoGet:
+    handler: lambdas/vivino_api.get_item # should be invoked on demand for winery, vintage
+
+resources:
+  Resources:
+    GrapyDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+          - AttributeName: data
+            AttributeType: S
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        GlobalSecondaryIndexes:
+          - IndexName: gsi_1
+            KeySchema:
+              - AttributeName: sk
+                KeyType: HASH
+              - AttributeName: data
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST

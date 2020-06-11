@@ -1,0 +1,6 @@
+# This file contains the Vivino algoliasearch parameters
+
+algolia:
+  applicationId: "YOUR_ID"
+  apiKey: "YOUR_KEY"
+  indexName: "YOUR_INDEX"

@@ -1,0 +1,5 @@
+{
+  "entity": "wine-types",
+  "pk": "id",
+  "gs1_sk": "name"
+}
