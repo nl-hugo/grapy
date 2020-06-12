@@ -90,9 +90,6 @@ ITEM_PIPELINES = {
 # HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-# Logging
-# LOG_FILE = 'logs/log.txt'  # enable to log to file, disable to log to console
-LOG_LEVEL = 'INFO'
 
 # COMMANDS_MODULE = 'vendors.commands'
 
