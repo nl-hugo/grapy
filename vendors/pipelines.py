@@ -37,21 +37,34 @@ class WineVendorsPipeline(object):
             self.table = dynamodb.Table(settings['DYNAMODB_TABLE'])
 
     def validate(self, item):
+        valid = False
 
-        # for data in item:
-        #     if not data:
-        #         valid = False
-        #         raise DropItem('Missing {0}!'.format(data))
-        # TODO: improve validation
-        # TODO: check data types
-        if not all(field in item for field in self.required_fields):
-            print('dropped missing {}'.format(item['url']))
-            raise DropItem('Required field missing: {}'.format(item))
-        elif any(name in item['name'].lower() for name in self.forbidden_names):  # TODO: contains, ignore case
-            print('dropped forbidden {}'.format(item['url']))
-            raise DropItem('Forbidden name: {}'.format(item))
-        else:
-            return True
+        # better to be too strict, to avoid dirty data
+        for data in item:
+            if not data:
+                raise DropItem('Missing {}'.format(data))
+
+        # must not contain forbidden name
+        for name in self.forbidden_names:
+            if name in item['name'].lower():
+                raise DropItem('Forbidden name {}'.format(name))
+
+        # price greater than zero
+        if item['price'] <= 0:
+            raise DropItem('Price too low {}'.format(item['price']))
+
+        # acceptable volumes
+        if item['volume'] not in [.375, .5, .75, 1, 1.5, 2.25, 3, 6]:
+            raise DropItem('Volume {} not acceptable'.format(item['volume']))
+
+        # set year if missing
+        if item['year'] is None:
+            logging.warning('Vintage missing, set to U.V.')
+            item['year'] = 'U.V.'
+
+        # TODO: does validate return when dropping an item?
+        valid = True
+        return valid
 
     def get_item(self, item):
         try:
@@ -76,9 +89,9 @@ class WineVendorsPipeline(object):
                 'name': item['name'],
                 'vendor': item['vendor'],
                 'winery': item['winery'],
-                'year': item['year'] or 'U.V.',
-                'price': Decimal(str(item['price'] or 0.0)),  # FIXME: fails if price is None, or updates to 0 sometimes
-                'volume': Decimal(str(item['volume'] or 0.0)),
+                'year': item['year'],
+                'price': Decimal(str(item['price'])),
+                'volume': Decimal(str(item['volume'])),
                 'firstSeen': now,
                 'lastSeen': now,
             })
