@@ -1,0 +1,14 @@
+{
+  "data": "vintages#12345",
+  "firstSeen": "2020-06-22 15:15:27 +0200",
+  "lastSeen": "2020-06-22 15:15:27 +0200",
+  "name": "Viognier",
+  "pk": "https://www.degoudenton.nl/corette-viognier",
+  "sk": "VENDORWINE",
+  "vendor": {
+    "name": "TestVendor",
+    "url": "www.vivino.com"
+  },
+  "winery": "Corette",
+  "year": "2018"
+}
