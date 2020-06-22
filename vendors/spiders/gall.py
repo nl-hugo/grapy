@@ -5,7 +5,6 @@ import re
 import scrapy
 
 from vendors.items import VendorWine
-from vendors.utils import int_or_none
 
 pattern = re.compile(r'dataLayer.push\((.*)\)')
 volumes = {
@@ -53,7 +52,7 @@ class GallSpider(scrapy.Spider):
             wine['price'] = product['price']
             wine['volume'] = volumes.get(product['variant'], -1)
 
-        wine['year'] = int_or_none(response.xpath(
-            '//dd[@class="product-attributes__title" and contains(text(), "Oogstjaar")]/following-sibling::node()/text()').get())
+        wine['year'] = response.xpath(
+            '//dd[@class="product-attributes__title" and contains(text(), "Oogstjaar")]/following-sibling::node()/text()').get()
 
         yield wine
