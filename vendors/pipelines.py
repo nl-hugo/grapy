@@ -8,7 +8,6 @@ from time import localtime, strftime
 import boto3
 from botocore.exceptions import ClientError
 from scrapy.conf import settings
-from scrapy.exceptions import DropItem
 
 
 def is_in_aws():
@@ -16,17 +15,6 @@ def is_in_aws():
 
 
 class WineVendorsPipeline(object):
-    required_fields = [
-        'url',
-        'name'
-    ]  # required fields
-
-    forbidden_names = [
-        'proefdoos',
-        'pakket',
-        'giftbox',
-        'cadeau'
-    ]  # anti-names
 
     def __init__(self):
         dynamodb = boto3.resource('dynamodb', region_name='eu-west-1')
@@ -36,37 +24,8 @@ class WineVendorsPipeline(object):
         else:
             self.table = dynamodb.Table(settings['DYNAMODB_TABLE'])
 
-    def validate(self, item):
-        valid = False
-
-        # better to be too strict, to avoid dirty data
-        for data in item:
-            if not data:
-                raise DropItem('Missing {}'.format(data))
-
-        # must not contain forbidden name
-        for name in self.forbidden_names:
-            if name in item['name'].lower():
-                raise DropItem('Forbidden name {}'.format(name))
-
-        # price greater than zero
-        if item['price'] <= 0:
-            raise DropItem('Price too low {}'.format(item['price']))
-
-        # acceptable volumes
-        if item['volume'] not in [.375, .5, .75, 1, 1.5, 2.25, 3, 6]:
-            raise DropItem('Volume {} not acceptable'.format(item['volume']))
-
-        # set year if missing
-        if item['year'] is None:
-            logging.warning('Vintage missing, set to U.V.')
-            item['year'] = 'U.V.'
-
-        # TODO: does validate return when dropping an item?
-        valid = True
-        return valid
-
     def get_item(self, item):
+        logging.debug('Get item {}'.format(item))
         try:
             response = self.table.get_item(
                 Key={
@@ -79,10 +38,11 @@ class WineVendorsPipeline(object):
             if 'Item' in response:
                 return response['Item']
 
-    def create_item(self, item):
+    def create_item(self, item, first_seen=None):
+        logging.debug('Create item {}, first seen at {}'.format(item, first_seen))
         now = strftime('%Y-%m-%d %H:%M:%S %z', localtime())
         try:
-            self.table.put_item(Item={
+            response = self.table.put_item(Item={
                 'pk': item['url'],
                 'sk': 'VENDORWINE',
                 'data': 'vintages#',
@@ -92,37 +52,76 @@ class WineVendorsPipeline(object):
                 'year': item['year'],
                 'price': Decimal(str(item['price'])),
                 'volume': Decimal(str(item['volume'])),
-                'firstSeen': now,
+                'firstSeen': first_seen or now,
                 'lastSeen': now,
             })
         except ClientError as e:
             logging.error(e.response['Error']['Message'])
+        else:
+            return self.get_item(item)
 
     def update_item(self, item):
-        # only update price and date updated
         now = strftime('%Y-%m-%d %H:%M:%S %z', localtime())
         try:
-            self.table.update_item(
+            response = self.table.update_item(
                 Key={
                     'pk': item['url'],
                     'sk': 'VENDORWINE',
                 },
-                UpdateExpression='set price=:p, volume=:v, lastSeen=:n',
+                UpdateExpression='set vendor=:vd, price=:p, volume=:v, lastSeen=:n',
                 ExpressionAttributeValues={
-                    ':p': Decimal(str(item['price'] or 0.0)),
-                    ':v': Decimal(str(item['volume'] or 0.0)),
+                    ':vd': item['vendor'],
+                    # ':vt': ':data' + '#test',
+                    ':p': Decimal(str(item['price'])),
+                    ':v': Decimal(str(item['volume'])),
                     ':n': now
                 },
             )
         except ClientError as e:
             logging.error(e.response['Error']['Message'])
+        else:
+            return self.get_item(item)
+
+    def delete_item(self, item):
+        logging.debug('Delete item {}'.format(item))
+        try:
+            response = self.table.delete_item(
+                Key={
+                    'pk': item.get('url'),
+                    'sk': 'VENDORWINE'
+                },
+                ReturnValues='ALL_OLD',
+            )
+        except ClientError as e:
+            logging.error(e.response['Error']['Message'])
+        else:
+            if 'Attributes' in response:
+                return response.get('Attributes')
 
     def process_item(self, item, spider):
-        if self.validate(item):
-            response = self.get_item(item)
-            if response:
-                self.update_item(item)
-            else:
-                self.create_item(item)
+        logging.debug('Process item {}'.format(item))
+        result = None
+        item.validate()
 
-        return item
+        # see if the item already exists
+        result = self.get_item(item)
+
+        if not result:
+            result = self.create_item(item)
+        else:
+            # see if the item needs to be recreated, if
+            # any of the fields wine, winery or year has changed
+            needs_recreate = result.get('name') != item.get('name') or \
+                             result.get('winery') != item.get('winery') or \
+                             result.get('year') != item.get('year')
+            if needs_recreate:
+                # wine, winery or year --> clear vintage#id
+                # vendor, price, volume --> ok, update
+                # pk, sk, data (url, VW, vintages#), firstSeen never update
+                # always update lastSeen
+                self.delete_item(item)
+                result = self.create_item(item, first_seen=result.get('firstSeen'))
+            else:
+                result = self.update_item(item)
+
+        return result

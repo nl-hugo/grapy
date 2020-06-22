@@ -91,9 +91,10 @@ ITEM_PIPELINES = {
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 
-# COMMANDS_MODULE = 'vendors.commands'
+# Logging
+LOG_LEVEL = 'INFO'
 
 TEMPLATES_DIR = 'vendors/templates'
 
-# For local testing only
-DYNAMODB_TABLE = 'grapy-prod'
+# Output to dev by default
+DYNAMODB_TABLE = 'grapy-dev'
