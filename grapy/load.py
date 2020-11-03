@@ -7,7 +7,7 @@ from grapy.vivino_api import VivinoApi
 
 def build_node_list(node_rows, pk, sk, gs1_sk):
     partition = []
-    for row in node_rows[:10]:
+    for row in node_rows:
         node_row = build_node(row, pk, sk, gs1_sk)
         partition.append({'PutRequest': {'Item': node_row}})
     return partition
