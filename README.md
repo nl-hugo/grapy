@@ -189,6 +189,5 @@ Todo
 - modify attrs to lastSeenAtVendor and lastSeenAtVivino
 - improve spider tests by using [Scrapy spider contracts]
 
-
 [Henri Bloem]: https://www.henribloem.nl/ 
 [Scrapy spider contracts]: https://docs.scrapy.org/en/latest/topics/contracts.html

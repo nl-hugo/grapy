@@ -21,17 +21,8 @@ class VendorWine(scrapy.Item):
     volume = scrapy.Field()
     year = scrapy.Field()
 
-    accepted_volumes = [.375, .5, .75, 1, 1.5, 2.25, 3, 6]
-
-    forbidden_names = [
-        "proefdoos",
-        "pakket",
-        "giftbox",
-        "cadeau"
-    ]
-
-    def validate(self):
-        logging.debug("Validate item {}".format(self))
+    def validate(self, forbidden_names, accepted_volumes):
+        logging.debug(f"Validate item {self}")
 
         # set vintage to "U.V." (unknown) if no year is specified
         if not self.get("year"):
@@ -49,22 +40,22 @@ class VendorWine(scrapy.Item):
         try:
             this_year = date.today().year
             if not 1700 < int(vintage) < this_year:
-                raise DropItem("Vintage not between 1700 and {}: {}".format(this_year, vintage))
+                raise DropItem(f"Vintage not between 1700 and {this_year}: {vintage}")
         except ValueError:
             if vintage not in ["U.V.", "N.V."]:
-                raise DropItem("Vintage not \"U.V.\" or \"N.V.\": {}".format(vintage))
+                raise DropItem(f"Vintage not \"U.V.\" or \"N.V.\": {vintage}")
 
         # price must be greater than one
         price = self.get("price")
         if price <= 1:
-            raise DropItem("Price too low {}".format(price))
+            raise DropItem(f"Price too low {price}")
 
         # acceptable volumes
         volume = self.get("volume")
-        if volume not in self.accepted_volumes:
-            raise DropItem("Volume {} not acceptable ({})".format(volume, self.accepted_volumes))
+        if volume not in accepted_volumes:
+            raise DropItem(f"Volume {volume} not acceptable ({accepted_volumes})")
 
         # must not contain forbidden name
-        for name in self.forbidden_names:
+        for name in forbidden_names:
             if name in self.get("name").lower():
-                raise DropItem("Forbidden name {}".format(name))
+                raise DropItem(f"Forbidden name {name}")

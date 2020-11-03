@@ -98,6 +98,17 @@ LOG_LEVEL = 'DEBUG'
 
 TEMPLATES_DIR = 'vendors/templates'
 
+# Vendor wine items containing any of the following forbidden names are dropped
+FORBIDDEN_NAMES = [
+    "proefdoos",
+    "pakket",
+    "giftbox",
+    "cadeau"
+]
+
+# Vendor wine items with volumes other that the ones listed below are dropped
+ACCEPTED_VOLUMES = [.375, .5, .75, 1, 1.5, 2.25, 3, 6]
+
 # Output to grapy ddb; variables are loaded from .env file
 # DYNAMODB_ENDPOINT = "https://[api-id].execute-api.eu-west-1.amazonaws.com/[stage]/vendorwines"
 # DYNAMODB_API_KEY = "[api-key]"
