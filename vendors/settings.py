@@ -8,6 +8,8 @@
 #     https://doc.scrapy.org/en/latest/topics/settings.html
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
+from dotenv import load_dotenv
+load_dotenv()
 
 BOT_NAME = 'grapy'
 
@@ -92,9 +94,10 @@ ITEM_PIPELINES = {
 
 
 # Logging
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'DEBUG'
 
 TEMPLATES_DIR = 'vendors/templates'
 
-# Output to dev by default
-DYNAMODB_TABLE = 'grapy-dev'
+# Output to grapy ddb; variables are loaded from .env file
+# DYNAMODB_ENDPOINT = "https://[api-id].execute-api.eu-west-1.amazonaws.com/[stage]/vendorwines"
+# DYNAMODB_API_KEY = "[api-key]"

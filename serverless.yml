@@ -19,13 +19,14 @@ service: grapy
 
 plugins:
   - serverless-python-requirements
+  - serverless-dotenv-plugin
 package:
   exclude:
     - ./**
   include:
-    - lambdas/**
+    - grapy/**
 
-custom: ${file(algoliasearch.yml)}
+#custom: ${file(algoliasearch.yml)}
 
 provider:
   name: aws
@@ -33,50 +34,64 @@ provider:
   timeout: 10 # optional, in seconds, default is 6
   region: eu-west-1
   stage: dev
+  apiKeys:
+    - ${self:service}-${opt:stage, self:provider.stage}-apiKey
   environment:
     DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
-    ALGOLIA_APP: ${self:custom.algolia.applicationId}
-    ALGOLIA_KEY: ${self:custom.algolia.apiKey}
-    ALGOLIA_INDEX: ${self:custom.algolia.indexName}
+    ALGOLIA_APP_ID: ${env:ALGOLIA_APP_ID}
+    ALGOLIA_API_KEY: ${env:ALGOLIA_API_KEY}
+    ALGOLIA_INDEX: ${env:ALGOLIA_INDEX}
+#    ALGOLIA_APP_ID: ${self:custom.algolia.applicationId}
+#    ALGOLIA_API_KEY: ${self:custom.algolia.apiKey}
+#    ALGOLIA_INDEX: ${self:custom.algolia.indexName}
   iamRoleStatements:
     - Effect: Allow
       Action:
-        - lambda:InvokeFunction
+#        - lambda:InvokeFunction
         - dynamodb:Query
         - dynamodb:Scan
         - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
+#        - dynamodb:DeleteItem
         - dynamodb:DescribeTable
         - dynamodb:BatchWriteItem
       Resource:
         - 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}'
         - 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}/index/*'
-        - 'arn:aws:lambda:${opt:region, self:provider.region}:*:function:*'
+#        - 'arn:aws:lambda:${opt:region, self:provider.region}:*:function:*'
 
-# TODO: restrict access to PUT functions
 functions:
-  grapyAll:
-    handler: lambdas/grapy_query.get_all
+  listEntities:
+    handler: grapy/lambdas.list_all # lists all entities on demand
     events:
       - http:
-          path: all/{entity}
+          path: /{entity}
           method: get
+          private: true
           cors: true
-  grapyNoVintage:
-    handler: lambdas/grapy_query.no_vintage  # scheduled every 15 minutes
+  addVendorWine:
+    handler: grapy/lambdas.add_vendor_wine # lists all entities on demand
+    events:
+      - http:
+          path: /vendorwines
+          method: put
+          private: true
+          cors: true
+  vivinofy:
+    handler: grapy/lambdas.vivinofy  # scheduled every 15 minutes
     events:
       - schedule:
-          name: vivino-search-schedule
+          name: ${self:service}-${opt:stage, self:provider.stage}-search-schedule
           rate: rate(15 minutes)
-          enabled: true
-  vivinoSearch:
-    handler: lambdas/vivino_search.search_vintage  # should be invoked by listNoVintage
-  vivinoList:
-    handler: lambdas/vivino_api.get_all # should be invoked once a month (?) for country, region, type, style, grape
-  vivinoGet:
-    handler: lambdas/vivino_api.get_item # should be invoked on demand for winery, vintage
+          enabled: false # disabled by default
+  updateEntities:
+    handler: grapy/lambdas.update_all  # should be invoked once a month to update country, region, type, style, grape
+    events:
+      - schedule:
+          name: ${self:service}-${opt:stage, self:provider.stage}-update-schedule
+          rate: rate(30 days)
+          enabled: false # disabled by default
 
 resources:
   Resources:

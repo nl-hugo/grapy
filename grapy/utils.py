@@ -6,3 +6,11 @@ def safe_get(dct, keys):
         except KeyError:
             return None
     return _dct
+
+
+def num_remaining(total, batch_size):
+    return max(0, total - batch_size)
+
+
+def num_updated(total, batch_size):
+    return min(batch_size, total)

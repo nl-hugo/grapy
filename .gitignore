@@ -1,7 +1,11 @@
 .idea
 .serverless
+.pytest_cache
 node_modules
 __pycache__
 
+.env
 logs/**
-algoliasearch.yml
+
+vendors/commands
+powerbi
