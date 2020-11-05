@@ -17,28 +17,28 @@ class TestUtils(unittest.TestCase):
         """
         :return:
         """
-        res = utils.safe_get(self.dct, ['fail'])
+        res = utils.safe_get(self.dct, ["fail"])
         self.assertEqual(None, res)
 
     def test_safe_get_parent(self):
         """
         :return:
         """
-        res = utils.safe_get(self.dct, ['parent'])
+        res = utils.safe_get(self.dct, ["parent"])
         self.assertEqual({"child": "ok"}, res)
 
     def test_safe_get_child(self):
         """
         :return:
         """
-        res = utils.safe_get(self.dct, ['parent', 'child'])
+        res = utils.safe_get(self.dct, ["parent", "child"])
         self.assertEqual("ok", res)
 
     def test_safe_get_child_only(self):
         """
         :return:
         """
-        res = utils.safe_get(self.dct, ['child'])
+        res = utils.safe_get(self.dct, ["child"])
         self.assertEqual(None, res)
 
     def test_num_remaining(self):
@@ -52,5 +52,5 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(5, utils.num_updated(5, 10))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
