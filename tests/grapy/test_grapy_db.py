@@ -68,7 +68,7 @@ class TestGrapyDdb(unittest.TestCase):
         res = self.db.get_item("pk", f"vendorwines#{data.get('url')}", "sk", "VENDORWINES").get("Item")
         self.assertEqual("U.V.", res.get("year"))
         self.assertEqual("vintages#", res.get("data"))
-        self.assertIsNotNone(res.get("lastSeen"))
+        self.assertIsNotNone(res.get("last_updated_at"))
         self.db.delete_item("pk", f"vendorwines#{data.get('url')}", "sk", "VENDORWINES")
 
     def test_add_wine(self):
@@ -78,7 +78,7 @@ class TestGrapyDdb(unittest.TestCase):
         res = self.db.get_item("pk", "wines#1", "sk", "WINES").get("Item")
         self.assertEqual("wineries#1", res.get("data"))
         self.assertEqual("test", res.get("name"))
-        self.assertIsNotNone(res.get("lastSeen"))
+        self.assertIsNotNone(res.get("last_updated_at"))
         self.db.delete_item("pk", "wines#1", "sk", "WINES")
 
     def test_add_winery(self):
@@ -89,7 +89,7 @@ class TestGrapyDdb(unittest.TestCase):
         self.assertEqual("Catena Alta", res.get("name"))
         self.assertEqual("regions#454", res.get("data"))
         self.assertIsNone(res.get("location"))
-        self.assertIsNotNone(res.get("lastSeen"))
+        self.assertIsNotNone(res.get("last_updated_at"))
         self.db.delete_item("pk", "wineries#243350", "sk", "WINERIES")
 
     def test_add_vintage(self):
@@ -101,7 +101,7 @@ class TestGrapyDdb(unittest.TestCase):
         self.assertEqual("Catena Alta Malbec", res.get("name"))
         self.assertEqual("wines#1870", res.get("data"))
         self.assertEqual("", res.get("year"))
-        self.assertIsNotNone(res.get("lastSeen"))
+        self.assertIsNotNone(res.get("last_updated_at"))
         self.db.delete_item("pk", "vintages#1469245", "sk", "VINTAGES")
 
     def test_get_unknown_vintage(self):
