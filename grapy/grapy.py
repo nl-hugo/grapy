@@ -15,12 +15,13 @@ class Grapy():
         self.db = GrapyDDB()
         self.api = VivinoApi()
         self.search = VivinoSearch()
-        self.batch_size = os.environ.get("BATCH_SIZE", 10)
+        self.batch_size = int(os.environ.get("BATCH_SIZE", 10))
+        logging.debug(f"Initialized, BATCH_SIZE {self.batch_size}")
 
     @staticmethod
     def _get_last_seen(item):
-        # return item.get("lastSeen")
-        return item.get("lastVivinofied", "")
+        return item.get("last_updated_at", "")
+        # return item.get("lastVivinofied", "")
 
     def vivinofy(self):
         """
@@ -29,11 +30,11 @@ class Grapy():
         :return:
         """
         # list all wines without vintage
+        # TODO: maybe we want to update ratings for wines WITH vintage as well now and then...
         items = self.db.get_unknown_vintage().get("Items")
         logging.info(f"{len(items)} Vendor wine(s) ready to vivinofy")
 
         # sort by date last seen, oldest first
-        # TODO: oldest first? make sure that the process is not stuck with the same 10 no-vintages forever...
         sort_items = sorted(items, key=Grapy._get_last_seen)
 
         for item in sort_items[:self.batch_size]:
