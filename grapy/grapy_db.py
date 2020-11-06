@@ -114,3 +114,17 @@ class GrapyDDB(dynamo_db.DynamoDB):
         """
         logging.debug(f"Get all {entity}")
         return self.query_index(index_name="gsi_1", pk_name="sk", pk_value=entity.upper())
+
+    def delete_all(self, entity):
+        """
+        Deletes all items with the given entity name
+        :param entity:
+        :return:
+        """
+        logging.debug(f"Delete all {entity}")
+        items = self.get_all(entity).get("Items")
+        for item in items:
+            logging.debug(f"Deleting {item}")
+            self.delete_item("pk", item.get("pk"), "sk", entity.upper())
+
+        return len(items)
