@@ -5,6 +5,8 @@ def safe_get(dct, keys):
             _dct = _dct[key]
         except KeyError:
             return None
+        except TypeError:
+            return None
     return _dct
 
 
