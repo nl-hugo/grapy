@@ -9,7 +9,7 @@ def build_node_list(node_rows, pk, sk, gs1_sk):
     partition = []
     for row in node_rows:
         node_row = build_node(row, pk, sk, gs1_sk)
-        partition.append({'PutRequest': {'Item': node_row}})
+        partition.append({"PutRequest": {"Item": node_row}})
     return partition
 
 
@@ -18,13 +18,13 @@ def build_node(row, pk, sk, gs1_sk):
     node_row["pk"] = f"{sk.lower()}#{str(node_row.pop(pk, pk))}"
     node_row["sk"] = str(node_row.pop(sk, sk))
     node_row["data"] = build_composite_sort_key(node_row, gs1_sk)
-    node_row["lastSeen"] = strftime("%Y-%m-%d %H:%M:%S %z", localtime())
+    node_row["last_updated_at"] = strftime("%Y-%m-%d %H:%M:%S", localtime())
     return node_row
 
 
 def build_composite_sort_key(row, keyname):
     elements = keyname.split("#")
-    key = [str(row.pop(element, element)) for element in elements]
+    key = [str(row.pop(element, element) or "") for element in elements]
     return "#".join(key)
 
 

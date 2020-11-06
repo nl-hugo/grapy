@@ -1,6 +1,4 @@
-import os
 import unittest
-from unittest.mock import patch
 
 import grapy.load as utils
 
@@ -37,6 +35,15 @@ class TestGrapyDdb(unittest.TestCase):
     #     self.assertTrue("country" in item)
     #     self.assertTrue("class.id" in item)
     #     self.assertEqual(None, item["fail"])
+
+    def test_build_node_missing_fields(self):
+        item = {
+            "id": 3899667,
+            "winery.id": None
+        }
+        res = utils.build_node(item, "id", "WINES", "wineries#winery.id")
+        self.assertEqual("wines#3899667", res["pk"])
+        self.assertEqual("wineries#", res["data"])
 
 
 if __name__ == "__main__":
