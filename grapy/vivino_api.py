@@ -45,11 +45,12 @@ class VivinoApi:
         else:
             result = []
             # check if detailed info is available (e.g. for grapes)
-            # TODO: not very elegant...
-            for i, key in enumerate(r.get("id") for r in response if r.get("has_detailed_info") is True):
-                response[i] = self._query_api(entity, key=key)
-            for i in response:
-                result.append(VivinoApi._keep_selected_fields(i, keep))
+            for item in response:
+                if item.get("has_detailed_info") is True:
+                    detailed_item = self._query_api(entity, key=item.get("id"))
+                    result.append(VivinoApi._keep_selected_fields(detailed_item, keep))
+                else:
+                    result.append(VivinoApi._keep_selected_fields(item, keep))
         return result
 
     def get_countries(self):
