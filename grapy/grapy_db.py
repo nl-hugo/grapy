@@ -33,7 +33,7 @@ class GrapyDDB(dynamo_db.DynamoDB):
             ExpressionAttributeValues={
                 ":v": f"vintages#{vintage_id}", ":ts": strftime("%Y-%m-%d %H:%M:%S %z", localtime())
             },
-            ExpressionAttributeNames={"#data": "data", "#ts": "lastVivinofied"}
+            ExpressionAttributeNames={"#data": "data", "#ts": "last_vivinofied_at"}
         )
 
     def add_vendor_wine(self, item):
