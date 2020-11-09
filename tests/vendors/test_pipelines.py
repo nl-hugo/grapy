@@ -24,16 +24,16 @@ def fixture_wine():
 class TestWineVendorsPipeline(unittest.TestCase):
 
     def setUp(self):
-        self.pipeline = pipelines.WineVendorsPipeline()
+        self.pipeline = pipelines.WineVendorsPipeline("http://www.example.com", "key", [], [.75])
+        self.pipeline.open_spider(None)
 
         data = json.loads(fixture_wine())
         self.wine = items.VendorWine(data)
 
-    # def test_process_item(self):
-    #     """ """
-    #     response = self.pipeline.process_item(self.wine, None)
-    #     # TODO: deze klapt, want geen spider meegegeven...
-    #     self.assertEqual(1, 0)
+    def test_process_item(self):
+        """ """
+        response = self.pipeline.process_item(self.wine, None)
+        self.assertEqual(self.wine, response)
 
     def test_process_invalid_item(self):
         """ """
