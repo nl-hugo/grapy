@@ -48,7 +48,8 @@ class VendorWine(scrapy.Item):
         # price must be greater than one
         price = self.get("price")
         if price <= 1:
-            raise DropItem(f"Price too low {price}")
+            logging.warning(f"Price too low {price}")
+        #     raise DropItem(f"Price too low {price}")
 
         # acceptable volumes
         volume = self.get("volume")
