@@ -2,21 +2,34 @@ import json
 import logging
 import urllib.parse
 from decimal import Decimal
+from functools import wraps
 
 from grapy import decimalencoder, grapy, grapy_db
 
 logger = logging.getLogger()
 
 
+def as_lambda(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        logger.info(f"Received event \"{f.__name__}\" -- {args}")
+        response = f(*args, **kwargs)
+        return {
+            "statusCode": 200,
+            "body": json.dumps(response, cls=decimalencoder.DecimalEncoder)
+        }
+
+    return wrapper
+
+
+@as_lambda
 def update_all(event, context):
     # sls invoke local -f update
     grapy_db.GrapyDDB().populate()
-    return {
-        "statusCode": 200,
-        "body": "success"
-    }
+    return "GrapyDB populated."
 
 
+@as_lambda
 def list_all(event, context):
     """ Lists all items for the specified entity. """
     # sls invoke local -f listTable --data '{\"pathParameters\":{\"table\":\"countries\"},\"queryStringParameters\":{\"pk\":\"countries#ar\",\"sk\":\"COUNTRIES\",\"data\":\"Argentina\",\"limit\":10}}'
@@ -44,35 +57,26 @@ def list_all(event, context):
         next_page_url = f"https://{domain_name}{path}?{qs}"
 
     data = res.get("Items", [])
-    response = {
+    return {
         "data": data,
         "count": res.get("Count"),
         "nextPage": next_page_url
     }
-    return {
-        "statusCode": 200,
-        "body": json.dumps(response, cls=decimalencoder.DecimalEncoder)
-    }
 
 
+@as_lambda
 def add_vendor_wine(event, context):
     """ Adds a vendor wine to the Grapy database. """
     # to be used by scrapy to hand in newly scraped vendor wines
     # sls invoke local -f add -p tests/fixtures/vendorwine.json
     # float has to be translated to Decimal
     item = json.loads(event.get("body"), parse_float=Decimal)
-    res = grapy_db.GrapyDDB().add_vendor_wine(item)
-    return {
-        "statusCode": 200,
-        "body": json.dumps(res)
-    }
+    return grapy_db.GrapyDDB().add_vendor_wine(item)
 
 
+@as_lambda
 def vivinofy(event, context):
     """ Gets all vendor wines without vintage and searches Vivino for details. Results are stored in the Grapy
     database. """
     upd, rem = grapy.Grapy().vivinofy()
-    return {
-        "statusCode": 200,
-        "body": f"{upd} Vendor wines updated, {rem} remaining"
-    }
+    return f"{upd} Vendor wines updated, {rem} remaining"
