@@ -41,32 +41,26 @@ provider:
     ALGOLIA_APP_ID: ${env:ALGOLIA_APP_ID}
     ALGOLIA_API_KEY: ${env:ALGOLIA_API_KEY}
     ALGOLIA_INDEX: ${env:ALGOLIA_INDEX}
-#    ALGOLIA_APP_ID: ${self:custom.algolia.applicationId}
-#    ALGOLIA_API_KEY: ${self:custom.algolia.apiKey}
-#    ALGOLIA_INDEX: ${self:custom.algolia.indexName}
   iamRoleStatements:
     - Effect: Allow
       Action:
-#        - lambda:InvokeFunction
         - dynamodb:Query
         - dynamodb:Scan
         - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-#        - dynamodb:DeleteItem
         - dynamodb:DescribeTable
         - dynamodb:BatchWriteItem
       Resource:
         - 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}'
         - 'arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}/index/*'
-#        - 'arn:aws:lambda:${opt:region, self:provider.region}:*:function:*'
 
 functions:
-  listEntities:
+  listTable:
     handler: grapy/lambdas.list_all # lists all entities on demand
     events:
       - http:
-          path: /{entity}
+          path: /all/{table}
           method: get
           private: true
           cors: true

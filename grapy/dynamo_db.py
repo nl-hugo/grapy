@@ -83,18 +83,27 @@ class DynamoDB:
 
         return response
 
-    def query_index(self, index_name, pk_name, pk_value, sk_name=None, sk_value=None):
+    def query_index(self, index_name, pk_name, pk_value, sk_name=None, sk_value=None, start_key=None, limit=1000):
         """
-
         :param index_name:
         :param pk_name:
         :param pk_value:
         :param sk_name:
         :param sk_value:
+        :param start_key:
+        :param limit:
         :return:
         """
         filtering_exp = Key(pk_name).eq(pk_value)
         if sk_name and sk_value:
             filtering_exp = filtering_exp & Key(sk_name).eq(sk_value)
 
-        return self.table.query(IndexName=index_name, KeyConditionExpression=filtering_exp)
+        query_kwargs = {
+            "IndexName": index_name,
+            "KeyConditionExpression": filtering_exp,
+            "Limit": int(limit)
+        }
+        if start_key:
+            query_kwargs["ExclusiveStartKey"] = start_key
+
+        return self.table.query(**query_kwargs)

@@ -24,7 +24,7 @@ class GrapyDDB(dynamo_db.DynamoDB):
         :param vintage_id:
         :return:
         """
-        logging.debug(f"Set vintage id {vintage_id} for {url}")
+        logger.debug(f"Set vintage id {vintage_id} for {url}")
         key = dynamo_db.DynamoDB._build_key("pk", url, "sk", "VENDORWINES")
 
         return self.table.update_item(
@@ -42,7 +42,7 @@ class GrapyDDB(dynamo_db.DynamoDB):
         :param item:
         :return:
         """
-        logging.info(f"Add vendor wine {item}")
+        logger.info(f"Add vendor wine {item}")
 
         # adding the item updates existing items, if it already exists; note that all vintages are reset to `vintage#`
         # which forces a re-scrape on vivino
@@ -74,7 +74,7 @@ class GrapyDDB(dynamo_db.DynamoDB):
         :param item:
         :return:
         """
-        logging.debug(f"Add wine {item}")
+        logger.debug(f"Add wine {item}")
         row = load.build_node(item, "id", "WINES", "wineries#winery.id")
         return self.add_item(row)
 
@@ -84,7 +84,7 @@ class GrapyDDB(dynamo_db.DynamoDB):
         :param item:
         :return:
         """
-        logging.debug(f"Add winery {item}")
+        logger.debug(f"Add winery {item}")
         row = load.build_node(item, "id", "WINERIES", "regions#region.id")
         return self.add_item(row)
 
@@ -94,7 +94,7 @@ class GrapyDDB(dynamo_db.DynamoDB):
         :param item:
         :return:
         """
-        logging.debug(f"Add vintage {item}")
+        logger.debug(f"Add vintage {item}")
         row = load.build_node(item, "id", "VINTAGES", "wines#wine.id")
         return self.add_item(row)
 
@@ -103,28 +103,31 @@ class GrapyDDB(dynamo_db.DynamoDB):
         Lists all vendorwines with an unknown vintage
         :return:
         """
-        logging.debug("Get all vendor wines without vintage")
+        logger.debug("Get all vendor wines without vintage")
         return self.query_index("gsi_1", "sk", "VENDORWINES", "data", "vintages#")
 
-    def get_all(self, entity):
+    def get_all(self, table_name, last_key, limit=1000):
         """
-        Lists all items with the given entity name
-        :param entity:
+        Lists all items from table
+        :param table_name:
+        :param last_key:
+        :param limit:
         :return:
         """
-        logging.debug(f"Get all {entity}")
-        return self.query_index(index_name="gsi_1", pk_name="sk", pk_value=entity.upper())
+        logger.debug(f"Get all {table_name} paginated from {last_key} limit {limit}")
+        return self.query_index(index_name="gsi_1", pk_name="sk", pk_value=table_name.upper(), start_key=last_key,
+                                limit=limit)
 
-    def delete_all(self, entity):
+    def delete_all(self, table_name):
         """
-        Deletes all items with the given entity name
-        :param entity:
+        Deletes all items from table
+        :param table_name:
         :return:
         """
-        logging.debug(f"Delete all {entity}")
-        items = self.get_all(entity).get("Items")
+        logger.debug(f"Delete all {table_name}")
+        items = self.get_all(table_name, None, 1000).get("Items")
         for item in items:
             logging.debug(f"Deleting {item}")
-            self.delete_item("pk", item.get("pk"), "sk", entity.upper())
+            self.delete_item("pk", item.get("pk"), "sk", table_name.upper())
 
         return len(items)

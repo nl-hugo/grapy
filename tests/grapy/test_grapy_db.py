@@ -5,6 +5,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from grapy.grapy_db import GrapyDDB
+from grapy.load import build_adjacency_lists
 
 
 def fixture_vendorwine():
@@ -41,6 +42,12 @@ def fixture_winery():
         "website": "http://www.catenawines.com/catena-alta-wines.php",
         "location": None
     })
+
+
+def fixture_countries():
+    return json.dumps([
+        {"code": "x1", "name": "country1"}, {"code": "x2", "name": "country2"}, {"code": "x3", "name": "country3"}]
+    )
 
 
 class TestGrapyDdb(unittest.TestCase):
@@ -108,7 +115,22 @@ class TestGrapyDdb(unittest.TestCase):
         pass
 
     def test_get_all(self):
-        pass
+        data = json.loads(fixture_countries())
+        table_data = build_adjacency_lists(data, [], [], [], [])
+        self.db.load_dynamo_data(table_data)
+
+        res = self.db.get_all("countries", None, 1)
+        items = res.get("Items")
+        self.assertEqual(1, len(items))
+        self.assertEqual(1, res.get("Count"))
+
+        # get next page
+        next_key = res.get("LastEvaluatedKey")
+        self.assertEqual(items[0].get("pk"), next_key.get("pk"))
+
+        res2 = self.db.get_all("countries", next_key, 2)
+        self.assertEqual(2, len(res2.get("Items")))
+        self.assertEqual(2, res2.get("Count"))
 
     def test_update_price(self):
         data = json.loads(fixture_vendorwine(), parse_float=Decimal)
